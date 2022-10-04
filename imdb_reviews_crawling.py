@@ -186,7 +186,8 @@ def similarity_matrix(sentence_embedding):
 df["SimMatrix"] = df["SentenceEmbedding"].apply(similarity_matrix)
 print(df["SimMatrix"])
 
-# 유사도 행렬로부터 그래프를 그린다.
+''' 
+# 유사도 행렬로부터 그래프를 그린다. #시간소요도 높음
 def draw_graphs(sim_matrix):
     nx_graph = nx.from_numpy_array(sim_matrix)
     plt.figure(figsize=(10, 10))
@@ -197,7 +198,7 @@ def draw_graphs(sim_matrix):
 
 
 draw_graphs(df["SimMatrix"][1])
-
+'''
 
 # 페이지랭크 알고리즘의 입력으로 사용하여 각 문장의 점수를 구한다.
 def calculate_score(sim_matrix):
@@ -217,16 +218,15 @@ def ranked_sentences(sentences, scores, n=3):
 
 
 # 'ranked_sentences' 함수를 적용하여 'summary'열을 만든다.
-df["summary"] = df.apply(lambda x: ranked_sentences(x.sentences, x.score), axis=1)
+df["summary"] = df.apply(
+    lambda x: ranked_sentences(x["tokenized_sentences"], x["score"]), axis=1
+)
+print(df[["tokenized_sentences", "score", "summary"]])
 
-# 결과 확인
-# df[["review", "summary"]]
 
 for i in range(0, len(df)):
     print(i + 1, "번 문서")
-    print("원문 :", df.loc[i].article_text)
-    print("")
-    print("요약 :", df.loc[i].summary)
+    print("요약문 : ", df["summary"][i])
     print("")
 
 '''
