@@ -3,7 +3,6 @@
 https://wikidocs.net/91051
 """
 
-
 import numpy as np
 from urllib.request import urlretrieve, urlopen
 import gzip
@@ -13,8 +12,6 @@ import requests
 import nltk
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-import pandas as pd
-from konlpy.tag import Okt
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
