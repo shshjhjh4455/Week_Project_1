@@ -230,6 +230,18 @@ for i in range(0, len(df)):
     print("요약문 : ", df["summary"][i])
     print("")
 
+# 요약문을 .xml 파일로 저장
+import xml.etree.ElementTree as ET
+
+root = ET.Element("root")
+for i in range(0, len(df)):
+    doc = ET.SubElement(root, "doc")
+    doc.text = df["summary"][i]
+
+tree = ET.ElementTree(root)
+tree.write("summary.xml", encoding="utf-8", xml_declaration=True)
+
+
 '''
 
 
