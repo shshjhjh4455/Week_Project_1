@@ -63,49 +63,53 @@ res = requests.get(url)
 res.encoding = "utf-8"
 soup = BeautifulSoup(res.text, "lxml")
 
-for item in soup.select(".lister-list"):
-    rating = item.select("span.rating-other-user-rating > span")
-    if len(rating) == 2:
-        rating = rating[0].text
-    else:
+for item in soup.select(".lister-list"):  # 리뷰가 있는곳
+    rating = item.select("span.rating-other-user-rating > span")  # 평점이 있는곳
+    if len(rating) == 2:  # 평점이 있는 리뷰만
+        rating = rating[0].text  # 평점
+    else:  # 평점이 없는 리뷰는 제외
         rating = ""
-    review = item.select(".text")[0].text
+    review = item.select(".text")[0].text  # 리뷰글
 
-load_more = soup.select(".load-more-data")
+load_more = soup.select(
+    ".load-more-data"
+)  # www.imdb.com/title/tt6751668/reviews/?ref_=nv_sr_srsg_0 파일에 load-more-data 클래스
 flag = True
-if len(load_more):
-    ajaxurl = load_more[0]["data-ajaxurl"]
-    base_url = base_url + ajaxurl + "?ref_=undefined&paginationKey="
-    key = load_more[0]["data-key"]
-else:
-    flag = False
+if len(load_more):  # load-more-data 클래스가 있으면
+    ajaxurl = load_more[0]["data-ajaxurl"]  # data-ajaxurl 속성값을 가져온다.
+    base_url = (
+        base_url + ajaxurl + "?ref_=undefined&paginationKey="
+    )  # base_url에 붙여준다. ?ref_=undefined&paginationKey= 속성값은 베이스 url,ajaxurl, 키값만 사용하고 나머지는 빼준다.
+    key = load_more[0]["data-key"]  # data-key 속성값을 가져온다.
+else:  # load-more-data 클래스가 없으면
+    flag = False  # load-more-data 클래스가 없으면 flag를 False로 바꾼다.
 
-while flag:
-    url = base_url + key
-    print("url = ", url)
-    res = requests.get(url)
-    res.encoding = "utf-8"
-    soup = BeautifulSoup(res.text, "lxml")
-    for item in soup.select(".lister-item-content"):
-        rating = item.select("span.rating-other-user-rating > span")
-        if len(rating) == 2:
-            rating = rating[0].text
-            review = item.select(".text")[0].text
-            pn = int(rating)
-            rating_list.append(pn)
-            review_list.append(review)
+while flag:  # flag가 True이면
+    url = base_url + key  # url을 만든다.
+    print("url = ", url)  # url을 출력한다.
+    res = requests.get(url)  # url을 요청한다.
+    res.encoding = "utf-8"  # 인코딩을 utf-8로 한다.
+    soup = BeautifulSoup(res.text, "lxml")  # soup을 만든다.
+    for item in soup.select(".lister-item-content"):  # 리뷰가 있는곳
+        rating = item.select("span.rating-other-user-rating > span")  # 평점이 있는곳
+        if len(rating) == 2:  # 평점이 있는 리뷰만
+            rating = rating[0].text  # 평점
+            review = item.select(".text")[0].text  # 리뷰글
+            pn = int(rating)  # 평점을 정수로 바꾼다.
+            rating_list.append(pn)  # 평점을 rating_list에 추가한다.
+            review_list.append(review)  # 리뷰를 review_list에 추가한다.
             cnt = cnt + 1
-        else:
+        else:  # 평점이 없는 리뷰는 제외
             rating = ""
         review = item.select(".text")[0].text
 
-        if cnt >= MAX_CNT:
+        if cnt >= MAX_CNT:  # cnt가 MAX_CNT보다 크거나 같으면
             break
-    if cnt >= MAX_CNT:
+    if cnt >= MAX_CNT:  # cnt가 MAX_CNT보다 크거나 같으면
         break
-    load_more = soup.select(".load-more-data")
-    if len(load_more):
-        key = load_more[0]["data-key"]
+    load_more = soup.select(".load-more-data")  # load-more-data 클래스가 있는곳
+    if len(load_more):  # load-more-data 클래스가 있으면
+        key = load_more[0]["data-key"]  # data-key 속성값을 가져온다.
     else:
         flag = False
 
@@ -186,7 +190,7 @@ def similarity_matrix(sentence_embedding):
 df["SimMatrix"] = df["SentenceEmbedding"].apply(similarity_matrix)
 print(df["SimMatrix"])
 
-''' 
+""" 
 # 유사도 행렬로부터 그래프를 그린다. #시간소요도 높음
 def draw_graphs(sim_matrix):
     nx_graph = nx.from_numpy_array(sim_matrix)
@@ -198,7 +202,7 @@ def draw_graphs(sim_matrix):
 
 
 draw_graphs(df["SimMatrix"][1])
-'''
+"""
 
 # 페이지랭크 알고리즘의 입력으로 사용하여 각 문장의 점수를 구한다.
 def calculate_score(sim_matrix):
