@@ -65,7 +65,7 @@ for movie in movie_list:
         review_data.append(review.text)
 
     # 영화별로 데이터 프레임 생성 후 저장
-    df = pd.DataFrame({"title": movie_title, "review": review_data})
+    df = pd.DataFrame({"review": review_data})
     df.to_csv(movie_title + "_review.csv", index=False)
 
     # 리뷰 수집 완료
