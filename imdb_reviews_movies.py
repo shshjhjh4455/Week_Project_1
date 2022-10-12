@@ -19,13 +19,24 @@ else:
     browser = webdriver.Firefox(firefox_binary=driver)
 
 # 여러 영화 수집
-movie_list = ["tt6751668", "tt7286456", "tt4154796"]
+movie_list = [
+    "tt6751668",
+    "tt10919420",
+    "tt10633456",
+    "tt5700672",
+    "tt20869502",
+    "tt14518756",
+]
 review_list = []
 rating_list = []
 
 # movie_list 사용하여 리뷰 크롤링 시작, 리뷰 평점 높은 순서대로 크롤링
 for movie in movie_list:
-    url = "https://www.imdb.com/title/" + movie + "/reviews?sort=userRating&dir=desc&ratingFilter=0"
+    url = (
+        "https://www.imdb.com/title/"
+        + movie
+        + "/reviews?sort=userRating&dir=desc&ratingFilter=0"
+    )
     print("url = ", url)
     res = requests.get(url)
     res.encoding = "utf-8"
@@ -42,23 +53,22 @@ for movie in movie_list:
         try:
             browser.get(url)
             time.sleep(1)
-            button = browser.find_element_by_xpath(
-                '//*[@id="load-more-trigger"]'
-            )
+            button = browser.find_element_by_xpath('//*[@id="load-more-trigger"]')
             button.click()
             time.sleep(1)
         except:
             print("더 이상 리뷰가 없습니다.")
             break
     #  영화 제목(#main > section > div.subpage_title_block > div > div > h3 > a) 수집
-    movie_title = soup.select_one("#main > section > div.subpage_title_block > div > div > h3 > a").text
+    movie_title = soup.select_one(
+        "#main > section > div.subpage_title_block > div > div > h3 > a"
+    ).text
     print("movie_title = ", movie_title)
 
     # 리뷰 수집
     html = browser.page_source
     soup = BeautifulSoup(html, "html.parser")
     reviews = soup.select("div.text.show-more__control")
-
 
     # 리뷰 수집
     for review in reviews:
