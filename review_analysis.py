@@ -4,24 +4,14 @@ https://wikidocs.net/91051
 """
 
 import numpy as np
-from urllib.request import urlretrieve, urlopen
-import gzip
-import zipfile
-from collections import Counter
-import requests
 import nltk
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from nltk.tokenize import word_tokenize
 from nltk import sent_tokenize
 from tensorflow.keras.preprocessing.text import text_to_word_sequence
 from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
 from tqdm import tqdm
-import time
 
 
 # urlretrieve("http://nlp.stanford.edu/data/glove.6B.zip", filename="glove.6B.zip")
