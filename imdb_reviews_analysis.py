@@ -63,8 +63,8 @@ def load_csv(movie_name):
 
 sentences = []
 for s in movie_name:
-    sentences.extend(sent_tokenize(s))
     df = load_csv(s)
+    sentences.extend(sent_tokenize(s))
 print("분리된 문장 개수:", len(sentences))
 df.info()
 

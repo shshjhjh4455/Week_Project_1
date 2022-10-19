@@ -17,6 +17,7 @@ consumer_secret = "UeNkdgXggLBYF2lOm2rK4rbH0htlUf04QJW2OjrtpAmaOW02Mr"
 access_token = "1537768190616686592-AVeMPjPU6nINNqPESzoz32GIKacdsB"
 access_token_secret = "L4YOH7dhXUw2uVg3hbQRVG1OvdmMZSGhV5bHInD8vTGuy"
 
+
 # 트위터 API 인증을 합니다.
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
