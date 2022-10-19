@@ -22,10 +22,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
 
 
-# urlretrieve("http://nlp.stanford.edu/data/glove.6B.zip", filename="glove.6B.zip")
-# zf = zipfile.ZipFile('glove.6B.zip')
-# zf.extractall()
-# zf.close()
+urlretrieve("http://nlp.stanford.edu/data/glove.6B.zip", filename="glove.6B.zip")
+zf = zipfile.ZipFile('glove.6B.zip')
+zf.extractall()
+zf.close()
 
 nltk.download("stopwords")
 nltk.download("punkt")

@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from nltk.tokenize import word_tokenize
 from nltk import sent_tokenize
 
-# from tensorflow.keras.preprocessing.text import text_to_word_sequence
+from tensorflow.keras.preprocessing.text import text_to_word_sequence
 from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
 
@@ -43,13 +43,13 @@ nltk.download("averaged_perceptron_tagger")
 # Gaetmaeul = pd.read_csv("Gaetmaeul Chachacha_review.csv")
 
 # movie_name 배열 생성
-# movie_name = [
-#     "./미나리_review.csv",
-#     "./오징어 게임_review_csv",
-#     "./이상한 변호사 우영우_review.csv",
-#     "./Busanhaeng_review.csv",
-#     "./Gaetmaeul Chachacha_review.csv",
-# ]
+movie_name = [
+    "미나리_review.csv",
+    "오징어 게임_review_csv",
+    "이상한 변호사 우영우_review.csv",
+    "Busanhaeng_review.csv",
+    "Gaetmaeul Chachacha_review.csv",
+]
 
 # 영화별로 csv 파일을 로드 한다
 def load_csv(movie_name):

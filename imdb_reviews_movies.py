@@ -76,7 +76,7 @@ for movie in movie_list:
 
     # 영화별로 데이터 프레임 생성 후 저장
     df = pd.DataFrame({"review": review_data})
-    df.to_csv(movie_title + "_review.csv", index=False)
+    df.to_csv("Week_Project_1/" + movie_title + "_review.csv")
 
     # 리뷰 수집 완료
     print("수집 완료")
