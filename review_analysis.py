@@ -137,14 +137,17 @@ for i in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     )
     print(df[["tokenized_sentences", "score", "summary"]])
 
-    for k in range(0, len(df)):
-        print(k + 1, "번 문서")
-        print("요약문 : ", df["summary"][k])
-        print("")
+    # 원문과 요약문을 비교하여 출력한다.
+    for i in tqdm(range(len(df)), desc="summary"):
+        print("원문 : ", df["text"][i])
+        print("요약문 : ", df["summary"][i])
+        print("\n")
 
-    # 요약문을 csv 파일로 저장, 파일명(movie_name[i]_summary.csv)])
-    df.to_csv(movie_name[i] + "_summary.csv", index=False, encoding="utf-8-sig")
-    print(movie_name[i] + "저장완료")
+    # 요약문을 데이터프레임(원문,요약문)으로 만들어 csv파일로 저장한다.
+    df2 = pd.DataFrame({"원문": df["text"], "요약문": df["summary"]})
+    df2.to_csv(movie_name[i] + "summary.csv", index=False, encoding="utf-8-sig")
+
+    print("요약문 생성 완료")
 
 
 '''
