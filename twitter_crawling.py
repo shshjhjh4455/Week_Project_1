@@ -1,4 +1,4 @@
-# 트위터 트윗 크롤링하여 그래프로 시각화하기
+# https://developer.twitter.com/en/portal/projects/1582545735115243521/apps/25776793/keys
 
 import tweepy
 import matplotlib.pyplot as plt

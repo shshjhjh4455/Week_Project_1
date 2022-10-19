@@ -34,14 +34,6 @@ nltk.download("wordnet")
 nltk.download("omw-1.4")
 nltk.download("averaged_perceptron_tagger")
 
-# csv 파일 로드
-# gisaengchung = pd.read_csv("Gisaengchung_review.csv")
-# minari = pd.read_csv("미나리_review_csv")
-# sqeeze = pd.read_csv("오징어 게임_review_csv")
-# woo = pd.read_csv("이상한 변호사 우영우_review.csv")
-# Busanhaeng = pd.read_csv("Busanhaeng_review.csv")
-# Gaetmaeul = pd.read_csv("Gaetmaeul Chachacha_review.csv")
-
 # movie_name 배열 생성
 movie_name = [
     "미나리_review.csv",
