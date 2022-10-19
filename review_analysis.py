@@ -27,14 +27,15 @@ nltk.download("averaged_perceptron_tagger")
 
 # movie_name 배열 생성
 movie_name = [
-    "미나리_review.csv",
-    "오징어 게임_review.csv",
-    "이상한 변호사 우영우_review.csv",
-    "Busanhaeng_review.csv",
-    "Gaetmaeul Chachacha_review.csv",
+    "미나리",
+    "오징어 게임",
+    "이상한 변호사 우영우",
+    "Busanhaeng",
+    "Gaetmaeul Chachacha",
 ]
 for i in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
-    df = pd.read_csv(movie_name[i])
+    df = pd.read_csv(movie_name[i] + "_review.csv")
+    
     ## 문장 토큰화
     # review 컬럼을 반복하여 sent_tokenize()를 이용해 문장 단위로 분리
     sentences = []
@@ -137,17 +138,13 @@ for i in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     )
     print(df[["tokenized_sentences", "score", "summary"]])
 
-    # 원문과 요약문을 비교하여 출력한다.
-    for i in tqdm(range(len(df)), desc="summary"):
-        print("원문 : ", df["text"][i])
-        print("요약문 : ", df["summary"][i])
-        print("\n")
+    # 요약문을 출력한다.
+    print(df["summary"][0])
 
-    # 요약문을 데이터프레임(원문,요약문)으로 만들어 csv파일로 저장한다.
-    df2 = pd.DataFrame({"원문": df["text"], "요약문": df["summary"]})
-    df2.to_csv(movie_name[i] + "summary.csv", index=False, encoding="utf-8-sig")
+    # df['summary']를 csv파일로 저장
+    df.to_csv(movie_name[i] + "_summary.csv", index=False, encoding="utf-8-sig")
 
-    print("요약문 생성 완료")
+    print(movie_name[i] + "_summary.csv 저장 완료")
 
 
 '''
