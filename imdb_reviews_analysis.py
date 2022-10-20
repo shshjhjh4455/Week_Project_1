@@ -125,18 +125,22 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     # 문서의 단어 벡터를 이용해 코사인 유사도를 구함
     similarity = cosine_similarity(embedding_matrix, doc_embedding.reshape(1, -1))
 
+    # sililarity에서 품사가 명사인 단어만 출력
+    noun = [word for word, tag in tagged_list if tag in ["NN", "NNS", "NNP", "NNPS"]]
+    noun = list(set(noun))
+    noun_similarity = []
+    for i in range(len(noun)):
+        noun_similarity.append(similarity[i])
+
     # 코사인 유사도가 높은 순으로 단어를 정렬
-    sorted_index = similarity.ravel().argsort()[::-1]
+    noun_similarity = np.array(noun_similarity)
 
-    # 코사인 유사도가 높은 단어 10개를 출력
-    for index in tqdm(sorted_index[:10], desc="progress_print"):
-        print(tokens[index], similarity[index])
-
-    # tokens[index], similarity[index] 를 이용해 데이터 프레임 생성, 저장
+    # 데이터 프레임 생성 후 저장
     df = pd.DataFrame(
         {
-            "word": [tokens[index] for index in sorted_index[:10]],
-            "similarity": [similarity[index] for index in sorted_index[:10]],
+            "word": noun,
+            "similarity": noun_similarity.reshape(-1),
         }
     )
-    df.to_csv(movie_name[k] + "_word.csv", index=False)
+    df = df.sort_values(by="similarity", ascending=False)
+    df.to_csv(movie_name[k] + "_noun_similarity.csv", index=False)
