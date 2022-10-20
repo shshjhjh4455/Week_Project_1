@@ -17,13 +17,6 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import os
 
-if os.name == "posix":
-    plt.rc("font", family="AppleGothic")
-
-else:
-    plt.rc("font", family="Malgun Gothic")
-
-
 # urlretrieve("http://nlp.stanford.edu/data/glove.6B.zip", filename="glove.6B.zip")
 # zf = zipfile.ZipFile('glove.6B.zip')
 # zf.extractall()
@@ -42,6 +35,7 @@ movie_name = [
     "이상한 변호사 우영우",
     "Busanhaeng",
     "Gaetmaeul Chachacha",
+    "Gisaengchung",
 ]
 for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     df = pd.read_csv(movie_name[k] + "_review.csv")
@@ -118,8 +112,6 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
             embedding_matrix[i] = embeddings_index[word]
         else:
             print(word)
-
-    # 문서의 단어 벡터를 생성
     doc_embedding = np.mean(embedding_matrix, axis=0)
 
     # 문서의 단어 벡터를 이용해 코사인 유사도를 구함
