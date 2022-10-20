@@ -77,38 +77,32 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
         embeddings_index[word] = coefs
     f.close()
 
-    # 단어 벡터를 저장할 배열 생성
-    embedding_matrix = np.zeros((len(tokens), 100))
+    # Glove의 단어 임베딩 벡터를 이용해 문서의 단어 벡터를 생성
+    # 문서의 단어 벡터는 문서의 모든 단어 벡터의 평균으로 생성
+    embedding_dim = 100
+    embedding_matrix = np.zeros((len(tokens), embedding_dim))
+    for i, word in tqdm(enumerate(tokens),desc="progress_embedding"):
+        if word in embeddings_index:
+            embedding_matrix[i] = embeddings_index[word]
+        else:
+            print(word)
 
-    # 단어 벡터를 저장
-    for i, word in tqdm(enumerate(tokens), desc="progress_embedding"):
-        embedding_vector = embeddings_index.get(word)
-        if embedding_vector is not None:
-            embedding_matrix[i] = embedding_vector
+    # 문서의 단어 벡터를 생성
+    doc_embedding = np.mean(embedding_matrix, axis=0)
 
-    # 코사인 유사도를 구할 단어 벡터를 저장할 배열 생성
-    word_vectors = np.zeros((len(tokens), 100))
+    # 문서의 단어 벡터를 이용해 코사인 유사도를 구함
+    similarity = cosine_similarity(embedding_matrix, doc_embedding.reshape(1, -1))
 
-    # 코사인 유사도를 구할 단어 벡터를 저장
-    for i, word in tqdm(enumerate(tokens), desc="progress_word_vectors"):
-        word_vectors[i] = embedding_matrix[i]
+    # 코사인 유사도가 높은 순으로 단어를 정렬
+    sorted_index = similarity.ravel().argsort()[::-1]
 
-    # 코사인 유사도를 구함
-    similarity = cosine_similarity(word_vectors)
-    print(similarity)
+    # 코사인 유사도가 높은 단어 10개를 출력
+    for index in tqdm(sorted_index[:10], desc="progress_print"):
+        print(tokens[index], similarity[index])
 
-    # 코사인 유사도를 이용해 그래프 생성
-    G = nx.from_numpy_array(similarity)
-    scores = nx.pagerank(G)
-
-    # 그래프에서 가장 중요한 단어 10개를 출력
-    ranked_words = sorted(
-        ((scores[i], s) for i, s in tqdm(enumerate(tokens), desc="ranked_words")),
-        reverse=True,
+    # tokens[index], similarity[index] 를 이용해 데이터 프레임 생성, 저장
+    df = pd.DataFrame(
+        {"word": [tokens[index] for index in sorted_index[:10]],
+            "similarity": [similarity[index] for index in sorted_index[:10]]}
     )
-    for word in ranked_words[:10]:
-        print(word)
-
-    # 저장
-    df = pd.DataFrame(ranked_words)
     df.to_csv(movie_name[k] + "_word.csv", index=False)
