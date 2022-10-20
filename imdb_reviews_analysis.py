@@ -60,9 +60,41 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     # 영어가 아닌 단어 제거
     tokens = [word for word in tokens if word.isalpha()]
 
+    # 단어 길이가 4 이하인 단어 제거
+    tokens = [word for word in tokens if len(word) > 4]
+
+    # 단어를소문자로 변환
+    tokens = [word.lower() for word in tokens]
+
     # 표제어 추출
     lemmatizer = WordNetLemmatizer()
     tokens = [lemmatizer.lemmatize(w) for w in tokens]
+
+    # 단어의 품사가 명사, 형용사, 부사, 동사인 단어만 추출
+    tagged_list = nltk.pos_tag(tokens)
+    tokens = [
+        word
+        for word, tag in tagged_list
+        if tag
+        in [
+            "NN",
+            "NNS",
+            "NNP",
+            "NNPS",
+            "JJ",
+            "JJR",
+            "JJS",
+            "RB",
+            "RBR",
+            "RBS",
+            "VB",
+            "VBD",
+            "VBG",
+            "VBN",
+            "VBP",
+            "VBZ",
+        ]
+    ]
 
     # tokens에 중복된 단어 제거
     tokens = list(set(tokens))
@@ -81,7 +113,7 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     # 문서의 단어 벡터는 문서의 모든 단어 벡터의 평균으로 생성
     embedding_dim = 100
     embedding_matrix = np.zeros((len(tokens), embedding_dim))
-    for i, word in tqdm(enumerate(tokens),desc="progress_embedding"):
+    for i, word in tqdm(enumerate(tokens), desc="progress_embedding"):
         if word in embeddings_index:
             embedding_matrix[i] = embeddings_index[word]
         else:
@@ -102,7 +134,9 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
 
     # tokens[index], similarity[index] 를 이용해 데이터 프레임 생성, 저장
     df = pd.DataFrame(
-        {"word": [tokens[index] for index in sorted_index[:10]],
-            "similarity": [similarity[index] for index in sorted_index[:10]]}
+        {
+            "word": [tokens[index] for index in sorted_index[:10]],
+            "similarity": [similarity[index] for index in sorted_index[:10]],
+        }
     )
     df.to_csv(movie_name[k] + "_word.csv", index=False)
