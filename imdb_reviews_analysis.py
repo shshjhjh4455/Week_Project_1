@@ -9,11 +9,19 @@ import pandas as pd
 import numpy as np
 from nltk import sent_tokenize
 from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 from tensorflow.keras.preprocessing.text import text_to_word_sequence
 from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import os
+
+if os.name == "posix":
+    plt.rc("font", family="AppleGothic")
+
+else:
+    plt.rc("font", family="Malgun Gothic")
 
 
 # urlretrieve("http://nlp.stanford.edu/data/glove.6B.zip", filename="glove.6B.zip")
@@ -35,8 +43,8 @@ movie_name = [
     "Busanhaeng",
     "Gaetmaeul Chachacha",
 ]
-for i in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
-    df = pd.read_csv(movie_name[i] + "_review.csv")
+for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
+    df = pd.read_csv(movie_name[k] + "_review.csv")
 
     # 모든 리뷰를 하나의 문자열로 합침
     review_text = df["review"].str.cat(sep=" ")
@@ -45,65 +53,62 @@ for i in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     tokens = text_to_word_sequence(review_text)
     print("단어 개수:", len(tokens))
 
-    # 사전 훈련된 GloVe
-    glove_dict = dict()
-    f = open("glove.6B.100d.txt", encoding="utf8")  # 100차원의 GloVe 벡터를 사용
+    # 불용어 제거
+    stop_words = stopwords.words("english")
+    tokens = [w for w in tokens if not w in stop_words]
 
-    for line in tqdm(f, desc="glove"):
-        word_vector = line.split()
-        word = word_vector[0]
-        word_vector_arr = np.asarray(
-            word_vector[1:], dtype="float32"
-        )  # 100개의 값을 가지는 array로 변환
-        glove_dict[word] = word_vector_arr
+    # 영어가 아닌 단어 제거
+    tokens = [word for word in tokens if word.isalpha()]
+
+    # 표제어 추출
+    lemmatizer = WordNetLemmatizer()
+    tokens = [lemmatizer.lemmatize(w) for w in tokens]
+
+    # tokens에 중복된 단어 제거
+    tokens = list(set(tokens))
+
+    # glove.6B.100d.txt 파일을 읽어옴
+    embeddings_index = {}
+    f = open("glove.6B.100d.txt", encoding="utf-8")
+    for line in f:
+        values = line.split()
+        word = values[0]
+        coefs = np.asarray(values[1:], dtype="float32")
+        embeddings_index[word] = coefs
     f.close()
 
-    #  GloVe 벡터의 차원은 100. 100차원의 영벡터를 만든다.
-    embedding_dim = 100
-    zero_vector = np.zeros(embedding_dim)
+    # 단어 벡터를 저장할 배열 생성
+    embedding_matrix = np.zeros((len(tokens), 100))
 
-    # 단어 벡터의 평균으로부터 문장 벡터를 얻는다.
-    def calculate_sentence_vector(sentence):
-        if len(sentence) != 0:
-            return sum([glove_dict.get(word, zero_vector) for word in sentence]) / len(
-                sentence
-            )
-        else:
-            return zero_vector
+    # 단어 벡터를 저장
+    for i, word in tqdm(enumerate(tokens), desc="progress_embedding"):
+        embedding_vector = embeddings_index.get(word)
+        if embedding_vector is not None:
+            embedding_matrix[i] = embedding_vector
 
-    # 문장에 대해서 calculate_sentence_vector()를 적용
-    sentences = sent_tokenize(review_text)
-    sentence_vectors = [
-        calculate_sentence_vector(text_to_word_sequence(sentence))
-        for sentence in sentences
-    ]
+    # 코사인 유사도를 구할 단어 벡터를 저장할 배열 생성
+    word_vectors = np.zeros((len(tokens), 100))
 
-    # 문장 벡터 간의 코사인 유사도 행렬을 구한다.
-    similarity_matrix = cosine_similarity(sentence_vectors)
+    # 코사인 유사도를 구할 단어 벡터를 저장
+    for i, word in tqdm(enumerate(tokens), desc="progress_word_vectors"):
+        word_vectors[i] = embedding_matrix[i]
 
-    # 코사인 유사도 행렬을 이용해 그래프를 생성한다.
-    graph = nx.from_numpy_array(similarity_matrix)
+    # 코사인 유사도를 구함
+    similarity = cosine_similarity(word_vectors)
+    print(similarity)
 
-    # 그래프 출력(숫자 라벨 지우기), 그래프 저장
-    plt.figure(figsize=(10, 10))
-    nx.draw_networkx(graph, with_labels=False, node_size=10)
-    plt.savefig(movie_name[i] + "_graph.png")
+    # 코사인 유사도를 이용해 그래프 생성
+    G = nx.from_numpy_array(similarity)
+    scores = nx.pagerank(G)
 
-    # 그래프에서 문장의 중요도를 계산한다.
-    scores = nx.pagerank(graph)
-
-    # 페이저랭크 알고리즘으로 구한 점수를 기준으로 문장을 정렬
-    ranked_sentences = sorted(
-        ((scores[i], s) for i, s in tqdm(enumerate(sentences), desc="sorted by score")),
+    # 그래프에서 가장 중요한 단어 10개를 출력
+    ranked_words = sorted(
+        ((scores[i], s) for i, s in tqdm(enumerate(tokens), desc="ranked_words")),
         reverse=True,
     )
+    for word in ranked_words[:10]:
+        print(word)
 
-    # 상위 3개의 문장을 출력
-    for i in range(3):
-        print(ranked_sentences[i][1])
-        print()
-
-    # csv 파일로 저장
-    df = pd.DataFrame(ranked_sentences)
-    df.to_csv(movie_name[i] + "_analysis.csv", index=False, encoding="utf-8-sig")
-    print(movie_name[i] + "_analysis.csv 파일 저장 완료")
+    # 저장
+    df = pd.DataFrame(ranked_words)
+    df.to_csv(movie_name[k] + "_word.csv", index=False)
