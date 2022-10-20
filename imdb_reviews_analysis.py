@@ -13,6 +13,7 @@ from tensorflow.keras.preprocessing.text import text_to_word_sequence
 from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 
 # urlretrieve("http://nlp.stanford.edu/data/glove.6B.zip", filename="glove.6B.zip")
@@ -34,8 +35,8 @@ movie_name = [
     "Busanhaeng",
     "Gaetmaeul Chachacha",
 ]
-for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
-    df = pd.read_csv(movie_name[k] + "_review.csv")
+for i in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
+    df = pd.read_csv(movie_name[i] + "_review.csv")
 
     # 모든 리뷰를 하나의 문자열로 합침
     review_text = df["review"].str.cat(sep=" ")
@@ -43,16 +44,6 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     # review_text를 text_to_word_sequence()를 이용해 단어 단위로 분리
     tokens = text_to_word_sequence(review_text)
     print("단어 개수:", len(tokens))
-
-    # 불용어 제거
-    stop_words = stopwords.words("english")
-    tokens = [w for w in tokens if not w in stop_words]
-
-    # 단어가 숫자인 경우 제거
-    tokens = [word for word in tokens if word.isalpha()]
-
-    # tokens에 중복된 단어 제거
-    tokens = list(set(tokens))
 
     # 사전 훈련된 GloVe
     glove_dict = dict()
@@ -71,28 +62,48 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     embedding_dim = 100
     zero_vector = np.zeros(embedding_dim)
 
-    # tokens 리스트를 이용해 단어 벡터 표현을 만든다.
-    word_vector_dict = dict()
-    for word in tqdm(tokens, desc="word_vector"):
-        if word in glove_dict:
-            word_vector_dict[word] = glove_dict[word]
+    # 단어 벡터의 평균으로부터 문장 벡터를 얻는다.
+    def calculate_sentence_vector(sentence):
+        if len(sentence) != 0:
+            return sum([glove_dict.get(word, zero_vector) for word in sentence]) / len(
+                sentence
+            )
         else:
-            word_vector_dict[word] = zero_vector
-    
-    # word_vector_dict를 이용해 각 단어의 중요도를 계산한다.
-    word_vector_df = pd.DataFrame(word_vector_dict).T
-    word_vector_df["word"] = word_vector_df.index
-    word_vector_df.columns = list(range(100)) + ["word"]
-    word_vector_df = word_vector_df.reset_index(drop=True)
+            return zero_vector
 
-    # 각 단어의 중요도를 계산한다.
-    word_vector_df["importance"] = word_vector_df.iloc[:, 0:100].sum(axis=1)
+    # 문장에 대해서 calculate_sentence_vector()를 적용
+    sentences = sent_tokenize(review_text)
+    sentence_vectors = [
+        calculate_sentence_vector(text_to_word_sequence(sentence))
+        for sentence in sentences
+    ]
 
-    # 중요도가 높은 단어 순으로 정렬한다.
-    word_vector_df = word_vector_df.sort_values(by="importance", ascending=False)
+    # 문장 벡터 간의 코사인 유사도 행렬을 구한다.
+    similarity_matrix = cosine_similarity(sentence_vectors)
 
-    # 중요도가 높은 단어 10개를 출력한다.
-    print(word_vector_df.head(10))
-    
+    # 코사인 유사도 행렬을 이용해 그래프를 생성한다.
+    graph = nx.from_numpy_array(similarity_matrix)
+
+    # 그래프 출력(숫자 라벨 지우기), 그래프 저장
+    plt.figure(figsize=(10, 10))
+    nx.draw_networkx(graph, with_labels=False, node_size=10)
+    plt.savefig(movie_name[i] + "_graph.png")
+
+    # 그래프에서 문장의 중요도를 계산한다.
+    scores = nx.pagerank(graph)
+
+    # 페이저랭크 알고리즘으로 구한 점수를 기준으로 문장을 정렬
+    ranked_sentences = sorted(
+        ((scores[i], s) for i, s in tqdm(enumerate(sentences), desc="sorted by score")),
+        reverse=True,
+    )
+
+    # 상위 3개의 문장을 출력
+    for i in range(3):
+        print(ranked_sentences[i][1])
+        print()
+
     # csv 파일로 저장
-    word_vector_df.to_csv(movie_name[k] + "_word_vector.csv", index=False)
+    df = pd.DataFrame(ranked_sentences)
+    df.to_csv(movie_name[i] + "_analysis.csv", index=False, encoding="utf-8-sig")
+    print(movie_name[i] + "_analysis.csv 파일 저장 완료")
