@@ -71,44 +71,28 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
     embedding_dim = 100
     zero_vector = np.zeros(embedding_dim)
 
-    # tokens 리스트를 이용해 문장의 벡터 표현을 만든다.
-    sentence_vectors = []
-    for sentence in tqdm(tokens, desc="sentence"):
-        if len(sentence) != 0:
-            v = sum([glove_dict.get(w, zero_vector) for w in sentence]) / len(
-                sentence
-            )
+    # tokens 리스트를 이용해 단어 벡터 표현을 만든다.
+    word_vector_dict = dict()
+    for word in tqdm(tokens, desc="word_vector"):
+        if word in glove_dict:
+            word_vector_dict[word] = glove_dict[word]
         else:
-            v = zero_vector
-        sentence_vectors.append(v)
+            word_vector_dict[word] = zero_vector
     
-    # sentence_vectors를 이용해 각 단어의 중요도를 계산한다.
-    sim_mat = np.zeros([len(tokens), len(tokens)])
-    for i in tqdm(range(len(tokens)), desc="sim_mat"):
-        for j in range(len(tokens)):
-            if i != j:
-                sim_mat[i][j] = cosine_similarity(
-                    sentence_vectors[i].reshape(1, embedding_dim),
-                    sentence_vectors[j].reshape(1, embedding_dim),
-                )[0, 0]
+    # word_vector_dict를 이용해 각 단어의 중요도를 계산한다.
+    word_vector_df = pd.DataFrame(word_vector_dict).T
+    word_vector_df["word"] = word_vector_df.index
+    word_vector_df.columns = list(range(100)) + ["word"]
+    word_vector_df = word_vector_df.reset_index(drop=True)
 
-    # sim_mat를 이용해 네트워크를 생성한다.
-    nx_graph = nx.from_numpy_array(sim_mat)
-    scores = nx.pagerank(nx_graph)
+    # 각 단어의 중요도를 계산한다.
+    word_vector_df["importance"] = word_vector_df.iloc[:, 0:100].sum(axis=1)
 
-    # 중요도가 높은 순으로 정렬한다.
-    ranked_words = sorted(
-        ((scores[i], s) for i, s in tqdm(enumerate(tokens),desc="ranked_words")), reverse=True
-    )
+    # 중요도가 높은 단어 순으로 정렬한다.
+    word_vector_df = word_vector_df.sort_values(by="importance", ascending=False)
 
-    # 중요도가 높은 순으로 단어를 출력한다.
-    for i in range(10):
-        print(ranked_words[i][1])
-
+    # 중요도가 높은 단어 10개를 출력한다.
+    print(word_vector_df.head(10))
+    
     # csv 파일로 저장
-    df = pd.DataFrame(ranked_words)
-    df.to_csv(movie_name[k] + "_word_summary.csv", index=False)
-    print(movie_name[k] + " word summary complete")
-
-
-    
+    word_vector_df.to_csv(movie_name[k] + "_word_vector.csv", index=False)
