@@ -114,12 +114,25 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
             print(word)
     doc_embedding = np.mean(embedding_matrix, axis=0)
 
-    # 그래프 생성
-    G = nx.Graph()
-    for i, word in tqdm(enumerate(tokens), desc="progress_graph"):
-        G.add_node(word, pos=(doc_embedding[i], doc_embedding[i]))
+    # 시각화 위한 데이터 프레임 생성
+    # (Length mismatch: Expected axis has 100 elements, new values have 1129 elements)에러 대응
 
-    # 그래프에 간선 추가
+    df = pd.DataFrame(
+        {
+            "word": tokens,
+            "x": embedding_matrix[:, 0],
+            "y": embedding_matrix[:, 1],
+        }
+    )
+
+    # 시각화
+    fig = plt.figure()
+    fig.set_size_inches(40, 20)
+    ax = fig.add_subplot(1, 1, 1)
+    ax.scatter(df["x"], df["y"])
+    for i, word in enumerate(df["word"]):
+        ax.annotate(word, (df["x"][i], df["y"][i]))
+    plt.savefig(movie_name[k] + "_embedding.png")
 
     # 문서의 단어 벡터를 이용해 코사인 유사도를 구함
     similarity = cosine_similarity(embedding_matrix, doc_embedding.reshape(1, -1))
