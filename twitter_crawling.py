@@ -9,13 +9,17 @@ import re
 from konlpy.tag import Okt
 from collections import Counter
 from PIL import Image
-from datetime import datetime
+import datetime
+import time
+import pytz
+from tqdm import tqdm
+from pyspark.sql.functions import unix_timestamp, from_unixtime
 
 # 트위터 개발자 계정에서 발급받은 키와 토큰을 입력합니다.
-consumer_key = "qWTxC5XopETX9TLtR6N8kPXIM"
-consumer_secret = "UeNkdgXggLBYF2lOm2rK4rbH0htlUf04QJW2OjrtpAmaOW02Mr"
-access_token = "1537768190616686592-AVeMPjPU6nINNqPESzoz32GIKacdsB"
-access_token_secret = "L4YOH7dhXUw2uVg3hbQRVG1OvdmMZSGhV5bHInD8vTGuy"
+consumer_key = "Zvo63VWQx8wGsYuyjIK4qCazF"
+consumer_secret = "dpqekquWb9hUUGkiPmGZKaypdSaZDDtpdAwMLn3eukeMC5z6n9"
+access_token = "1537768190616686592-q6WpKSQv51VAtUwuNPjLb7xlLIaGqi"
+access_token_secret = "5qnkynxGIBiiW6JxeYbZhEhRbNkWpQ78O7fixiXcNHVuj"
 
 
 # 트위터 API 인증을 합니다.
@@ -23,21 +27,26 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
+# 트위터 검색 API(api.search_tweets)를 이용해 트윗을 검색합니다.
+# 검색어 : "parasite"
+# 검색 기간 : 2021-01-01 ~ 2021-01-31
+
+# 검색어를 입력합니다.
+keyword = "movie"
+
+# API.search_tweets(q, geocode, lang, locale, result_type, count, until, since_id, max_id, include_entities)
+# q : 검색어 = keyword
+# lang : 언어 = ko
+# result_type : 최신순, 인기순 = recent
+# count : 검색 결과 수 = 100
+# until : 검색 기간 = 2021-01-31
+
+# 검색 결과를 저장할 tweets 배열을 생성합니다.
 tweets = []
-tmpTweets = api.search_tweets("hashtags and filteration")
 
-# startDate(2019-01-01)
-startDate = datetime(2019, 1, 1, 0, 0, 0)
-# endDate(2019-12-31)
-endDate = datetime(2019, 12, 31, 0, 0, 0)
+# 검색 결과를 tweets 배열에 저장합니다.
+for tweet in tqdm(tweepy.Cursor(api.search_tweets, q=keyword, lang="en", result_type="recent", count=100, until="2022-10-21").items()):
+    tweets.append(tweet)
 
-
-for tweet in tmpTweets:
-    if tweet.created_at < endDate and tweet.created_at > startDate:
-        tweets.append(tweet)
-
-
-# 트윗 리스트를 데이터프레임으로 만듭니다.
-df = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=["Tweets"])
-
-# 트윗 수를 카운트하여 그래프로 그립니다.
+# 트윗의 개수를 출력합니다.
+print("트윗 개수 : ", len(tweets))

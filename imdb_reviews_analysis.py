@@ -114,6 +114,13 @@ for k in tqdm(range(len(movie_name)), mininterval=1, desc="progress_analysis"):
             print(word)
     doc_embedding = np.mean(embedding_matrix, axis=0)
 
+    # 그래프 생성
+    G = nx.Graph()
+    for i, word in tqdm(enumerate(tokens), desc="progress_graph"):
+        G.add_node(word, pos=(doc_embedding[i], doc_embedding[i]))
+
+    # 그래프에 간선 추가
+
     # 문서의 단어 벡터를 이용해 코사인 유사도를 구함
     similarity = cosine_similarity(embedding_matrix, doc_embedding.reshape(1, -1))
 
